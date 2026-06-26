@@ -1,0 +1,37 @@
+import { check, group } from "k6";
+import { requestsManager } from "../../requestsManager.ts";
+
+
+export class UpdateUserDataDisableUser {
+    execute<T extends {userName:string, bodyObj: any} >(stepData: T ) {
+
+  const {userName, bodyObj} = stepData
+
+  bodyObj.userStatus = 1;  //
+
+return group('updateUserData', function () {
+
+
+      const params = {
+     headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    },
+        };
+   
+ const resp: any= requestsManager.userService.updateUserData(userName, JSON.stringify(bodyObj), params)
+
+  check(resp, { 
+    'updateUserDataDisableUser status equals 200': (r) => r.status === 200,
+    });
+
+    // console.log(`updateUserDataDisableUser Response Body: ${resp.body}`);
+    
+     return {...stepData};
+
+  });
+}
+
+}
+
+
