@@ -1,7 +1,7 @@
-import {CreateNewUser} from "./steps/user-steps/createNewUser.ts"
+import {CreateNewUser} from "./steps/user-steps/CreateNewUser.ts"
 import {LoginUser} from "./steps/user-steps/LoginUser.ts"
 import {UpdateUserDataDisableUser} from "./steps/user-steps/UpdateUserDataDisableUser.ts"
-import {GetUserIdByUsername} from "./steps/user-steps/getUserIdByUsername.ts"
+import {GetUserIdByUsername} from "./steps/user-steps/GetUserIdByUsername.ts"
 import {DropUser} from "./steps/user-steps/DropUser.ts"
 import {CheckUserIsNotFound} from "./steps/user-steps/CheckUserIsNotFound.ts"
 

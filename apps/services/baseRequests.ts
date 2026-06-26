@@ -23,7 +23,7 @@ export class BaseRequests {
 
     }
 
-    protected DELETE (path: string, body: RequestBody | null, params?: Params ) {
+    protected DELETE (path: string, body?: RequestBody | null, params?: Params ) {
     return http.del(`${this.baseURL}${path}`, body, params)
 
     }

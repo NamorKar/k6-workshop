@@ -1,9 +1,10 @@
 import { check, group } from "k6";
 import { requestsManager } from "../../requestsManager.ts";
+import { User } from "../../types/typeUser.ts";
 
 export class DropUser {
 
-    execute<T extends {userName:string, bodyObj: any} >(stepData: T ) {
+    execute<T extends {userName:string, bodyObj: User} >(stepData: T ) {
     
       const {userName, bodyObj} = stepData
     
