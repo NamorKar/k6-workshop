@@ -1,4 +1,4 @@
-import { stepsManagerExec } from "../apps/stepsManagerExec.ts";
+import { stepsManagerExec } from "../../apps/stepsManagerExec.ts";
 
 export const options = {
   vus: 1,

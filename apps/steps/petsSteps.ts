@@ -1,94 +1,77 @@
 import { check, group } from "k6";
 import { requestsManager } from "../requestsManager.ts";
 // @ts-ignore
-import { randomItem } from "../../framework/k6Libs/k6Utils.js"
+import { randomItem, randomIntBetween } from "../../framework/k6Libs/k6Utils.js"
 import { Pet } from "../../apps/types/typePet.ts";
 
 export class PetSteps {
 
-  // getAvailablePets () {
   getAvailablePets<T extends object>(stepData: T = {} as T) {
 
     return group('getAvailablePets', function () {
 
 
-      const resp: any = requestsManager.petService.findPetByStatus("available")
+      const resp = requestsManager.petService.findPetByStatus("available")
 
 
-      check(resp, { 'status equals 200': (r) => r.status === 200 });
-      // console.log(`response Body: ${resp.body}`);
+      check(resp, { 'getAvailablePets status equals 200': (r) => r.status === 200 });
 
-
-      const pets = JSON.parse(resp.body);
+      const pets = JSON.parse(resp.body as string);
       const randomPet = randomItem(pets);
 
-      const availablePetId = randomPet.id;
-      // console.log(`Found Available pet id: ${availablePetId}`);
+      const availablePetId: number = randomPet.id;
       return { ...stepData, availablePetId };
 
     });
   }
 
-  // getSoldPets () {
   getSoldPets<T extends object>(stepData: T = {} as T) {
 
     return group('getSoldPets', function () {
 
-      //   const resp: any = http.get('https://petstore.swagger.io/v2/pet/findByStatus?status=available');
-      const resp: any = requestsManager.petService.findPetByStatus("sold")
+      const resp = requestsManager.petService.findPetByStatus("sold")
 
 
-      check(resp, { 'status equals 200': (r) => r.status === 200 });
-      // console.log(`response Body: ${resp.body}`);
+      check(resp, { 'getSoldPets status equals 200': (r) => r.status === 200 });
 
-
-      const pets = JSON.parse(resp.body);
+      const pets = JSON.parse(resp.body as string);
       const randomPet = randomItem(pets);
 
       const soldPetId = randomPet.id;
-      // console.log(`Found Sold pet id: ${soldPetId}`);
       return { ...stepData, soldPetId };
 
     });
   }
 
 
-  // getPendingPets () {
   getPendingPets<T extends object>(stepData: T = {} as T) {
 
     return group('getPendingPets', function () {
 
-      //   const resp: any = http.get('https://petstore.swagger.io/v2/pet/findByStatus?status=available');
-      const resp: any = requestsManager.petService.findPetByStatus("pending")
+      const resp = requestsManager.petService.findPetByStatus("pending")
 
+      check(resp, { 'getPendingPets status equals 200': (r) => r.status === 200 });
 
-      check(resp, { 'status equals 200': (r) => r.status === 200 });
-      // console.log(`response Body: ${resp.body}`);
-
-
-      const pets = JSON.parse(resp.body);
+      const pets = JSON.parse(resp.body as string);
       const randomPet = randomItem(pets);
 
       const pendingPetId = randomPet.id;
       const pendingPetName = randomPet.name;
-      // console.log(`Found Pending id: ${pendingPetId}`);
-      // console.log(`Found Pending pet name: ${pendingPetName}`);
+
       return { ...stepData, pendingPetId, pendingPetName }
 
     });
   }
 
-  // getPetById(petId: string, petName: string) {
-  getPetById<T extends { soldPetId: string, pendingPetName: string }>(stepData: T) {
-    const { soldPetId, pendingPetName } = stepData
+  getPetById<T extends { petId: number }>(stepData: T) {
+    const { petId } = stepData
 
-    return group("Get Pet By Id", function () {
-      const getPetByIdResp = requestsManager.petService.findPetById(soldPetId)
+    return group("getPetById", function () {
+      const getPetByIdResp = requestsManager.petService.findPetById(String(petId))
 
-      check(getPetByIdResp, { 'status equals 200': (r) => r.status === 200 });
-      // console.log(`Found pet by id body: ${getPetByIdResp.body}`);
-      // console.log(`Found pet name: ${pendingPetName}`);
-      return { ...stepData, getPetByIdResp }
+      check(getPetByIdResp, { 'getPetById status equals 200': (r) => r.status === 200 });
+
+      return { ...stepData, petId }
 
     })
   }
@@ -97,14 +80,18 @@ export class PetSteps {
 
     return group('addNewPet', function () {
 
+      //Generate pet data
+      const petId: number = randomIntBetween(100000, 999999)
+      const categoryPetId: number = randomIntBetween(100, 999)
+
       // Request body
       const bodyObj: Pet = {
-        "id": 134,
+        "id": petId,
         "category": {
-          "id": 356,
+          "id": categoryPetId,
           "name": "string"
         },
-        "name": "doggie11",
+        "name": `pet ${petId}`,
         "photoUrls": [
           "string"
         ],
@@ -127,14 +114,15 @@ export class PetSteps {
       const resp = requestsManager.petService.addNewPet(JSON.stringify(bodyObj), params)
 
       const pets = JSON.parse(resp.body as string);
-      const petId = pets.id
+      const petIdResp = pets.id
 
       check(resp, {
         'addNewPet status equals 200': (r) => r.status === 200,
-        'addNewPet response pet Id matches requested pet Id': () => Number(petId) === bodyObj.id
+        'addNewPet response pet Id matches requested pet Id': () => Number(petIdResp) === bodyObj.id
       });
 
       return { ...stepData, petId, bodyObj };
+
 
     });
   };
@@ -167,19 +155,16 @@ export class PetSteps {
         'updatePetStatusToSold status is sold': () => petStatus === 'sold'
       });
 
-      // console.log(`updateUserDataDisableUser Response Body: ${resp.body}`);
-
       return { ...stepData };
 
     });
   }
 
-  deletePet<T extends { petId: string }>(stepData: T) {
+  deletePet<T extends { petId: number }>(stepData: T) {
 
     const { petId } = stepData
 
     return group('deletePet', function () {
-
 
       const params = {
         headers: {
@@ -189,26 +174,24 @@ export class PetSteps {
         },
       };
 
-      const resp = requestsManager.petService.deletePet(petId, null, params)
+      const resp = requestsManager.petService.deletePet(String(petId), null, params)
 
       check(resp, {
         'dropUser status equals 200': (r) => r.status === 200,
       });
-
-      // console.log(`dropUser Response Body: ${resp.body}`);
 
       return { ...stepData };
 
     });
   }
 
- checkPetIsNotFound<T extends { petId: string }>(stepData: T) {
+  checkPetIsNotFound<T extends { petId: number }>(stepData: T) {
 
     const { petId } = stepData
 
     return group('checkPetIsNotFound', function () {
 
-      const resp = requestsManager.petService.findPetById(petId)
+      const resp = requestsManager.petService.findPetById(String(petId))
 
       const pet = JSON.parse(resp.body as string);
       const petNotFoundMessage = pet.message;

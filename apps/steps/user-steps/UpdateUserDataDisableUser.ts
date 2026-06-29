@@ -20,14 +20,12 @@ return group('updateUserData', function () {
     },
         };
    
- const resp: any= requestsManager.userService.updateUserData(userName, JSON.stringify(bodyObj), params)
+ const resp = requestsManager.userService.updateUserData(userName, JSON.stringify(bodyObj), params)
 
   check(resp, { 
     'updateUserDataDisableUser status equals 200': (r) => r.status === 200,
     });
 
-    // console.log(`updateUserDataDisableUser Response Body: ${resp.body}`);
-    
      return {...stepData};
 
   });

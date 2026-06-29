@@ -2,7 +2,6 @@ import { check, group } from "k6";
 import { requestsManager } from "../requestsManager.ts";
 // @ts-ignore
 import * as UserDataGen from "../../framework/k6Libs/dataGenerator.js";
-import { RequestBody } from "k6/http";
 import { User } from "../types/typeUser.ts";
 
 
@@ -14,16 +13,13 @@ export class UserSteps {
 
     return group('getUserByEnteredUsername', function () {
 
-      const resp: any = requestsManager.userService.getUserByUsername(userName)
+      const resp = requestsManager.userService.getUserByUsername(userName)
 
       check(resp, { 'getUserByUsername status equals 200': (r) => r.status === 200 });
-      // console.log(`response Body: ${resp.body}`);
 
-
-      const users = JSON.parse(resp.body);
+      const users = JSON.parse(resp.body as string);
 
       const userId = users.id;
-      // console.log(`Found Available User Id: ${userId}`);
       return { ...stepData, userId };
 
     });
@@ -36,16 +32,16 @@ export class UserSteps {
 
     return group('checkUserIsNotFound', function () {
 
-      const resp: any = requestsManager.userService.getUserByUsername(userName)
+      const resp = requestsManager.userService.getUserByUsername(userName)
 
-      const users = JSON.parse(resp.body);
+      const users = JSON.parse(resp.body as string);
       const userNotFoundMessage = users.message;
 
       check(resp, {
         'checkUserIsNotFound status equals 404': (r) => r.status === 404,
         'checkUserIsNotFound response contains user not found': () => userNotFoundMessage == 'User not found',
       });
-      // console.log(`response Body: ${resp.body}`)
+
       return { ...stepData };
 
     });
@@ -54,8 +50,6 @@ export class UserSteps {
   createNewUser<T extends object>(stepData: T = {} as T) {
 
     return group('createNewUser', function () {
-
-      //const body: string = JSON.stringify(generateRandomUser()); Creates whole user data data
 
       // Generate user data
       const userId: number = UserDataGen.randomIntBetween(1000, 9999)
@@ -67,7 +61,7 @@ export class UserSteps {
       const userPhone: string = UserDataGen.randomPhone()
 
       // Generate request body
-      const bodyObj = {
+      const bodyObj: User = {
         "id": userId,
         "username": userName,
         "firstName": userFirstName,
@@ -85,9 +79,9 @@ export class UserSteps {
         },
       };
 
-      const resp: any = requestsManager.userService.createNewUser(JSON.stringify(bodyObj), params)
+      const resp = requestsManager.userService.createNewUser(JSON.stringify(bodyObj), params)
 
-      const users = JSON.parse(resp.body);
+      const users = JSON.parse(resp.body as string);
       const respUserId = users.message
 
       check(resp, {
@@ -95,7 +89,7 @@ export class UserSteps {
         'createNewUser response user Id matches requested user Id': () => Number(respUserId) === userId
       });
 
-      // console.log(`Created user ${userName} with id : ${userId}`);
+      console.log(`Created user ${userName} with id : ${userId}`);
       return { ...stepData, userId, userName, userPassword, bodyObj };
 
     });
@@ -113,9 +107,9 @@ export class UserSteps {
         },
       };
 
-      const resp: any = requestsManager.userService.loginUser(userName, userPassword, params)
+      const resp = requestsManager.userService.loginUser(userName, userPassword, params)
 
-      const users = JSON.parse(resp.body);
+      const users = JSON.parse(resp.body as string);
       const loginSessionMessage: string = users.message;
       const userSessionId = loginSessionMessage.match(/logged in user session:(\d+)/)?.[1];
 
@@ -125,7 +119,6 @@ export class UserSteps {
           return loginSessionMessage.includes('logged in user session');
         }
       });
-      //  console.log(`response Body: ${resp.body}`);
 
       return { ...stepData, userSessionId };
 
@@ -149,13 +142,11 @@ export class UserSteps {
         },
       };
 
-      const resp: any = requestsManager.userService.updateUserData(userName, JSON.stringify(bodyObj), params)
+      const resp = requestsManager.userService.updateUserData(userName, JSON.stringify(bodyObj), params)
 
       check(resp, {
         'updateUserDataDisableUser status equals 200': (r) => r.status === 200,
       });
-
-      // console.log(`updateUserDataDisableUser Response Body: ${resp.body}`);
 
       return { ...stepData };
 
@@ -176,13 +167,11 @@ export class UserSteps {
         },
       };
 
-      const resp: any = requestsManager.userService.deleteUser(userName, JSON.stringify(bodyObj), params)
+      const resp = requestsManager.userService.deleteUser(userName, JSON.stringify(bodyObj), params)
 
       check(resp, {
         'dropUser status equals 200': (r) => r.status === 200,
       });
-
-      // console.log(`dropUser Response Body: ${resp.body}`);
 
       return { ...stepData };
 

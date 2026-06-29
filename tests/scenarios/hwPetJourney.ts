@@ -1,4 +1,4 @@
-import { stepsManager } from "../apps/stepsManager.ts";
+import { stepsManager } from "../../apps/stepsManager.ts";
 
 
 export const options = {

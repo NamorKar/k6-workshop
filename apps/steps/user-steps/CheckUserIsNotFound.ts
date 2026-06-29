@@ -19,7 +19,7 @@ export class CheckUserIsNotFound {
                 'checkUserIsNotFound status equals 404': (r) => r.status === 404,
                 'checkUserIsNotFound response contains user not found': () => userNotFoundMessage == 'User not found',
             });
-            // console.log(`response Body: ${resp.body}`)
+
             return { ...stepData };
 
         });
