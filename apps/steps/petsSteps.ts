@@ -6,18 +6,20 @@ import { Pet } from "../../apps/types/typePet.ts";
 
 export class PetSteps {
 
-  getAvailablePets<T extends object>(stepData: T = {} as T) {
+  getAvailablePet<T extends object>(stepData: T = {} as T) {
 
-    return group('getAvailablePets', function () {
+    return group('getAvailablePet', function () {
 
 
       const resp = requestsManager.petService.findPetByStatus("available")
 
-
-      check(resp, { 'getAvailablePets status equals 200': (r) => r.status === 200 });
-
       const pets = JSON.parse(resp.body as string);
       const randomPet = randomItem(pets);
+      check(resp, {
+        'getAvailablePet status equals 200': (r) => r.status === 200,
+        'getAvailablePet all pets have status available': () => pets.every((pet: Pet) => pet.status === 'available'),
+
+      });
 
       const availablePetId: number = randomPet.id;
       return { ...stepData, availablePetId };
@@ -25,17 +27,20 @@ export class PetSteps {
     });
   }
 
-  getSoldPets<T extends object>(stepData: T = {} as T) {
+  getSoldPet<T extends object>(stepData: T = {} as T) {
 
-    return group('getSoldPets', function () {
+    return group('getSoldPet', function () {
 
       const resp = requestsManager.petService.findPetByStatus("sold")
-
-
-      check(resp, { 'getSoldPets status equals 200': (r) => r.status === 200 });
-
       const pets = JSON.parse(resp.body as string);
       const randomPet = randomItem(pets);
+
+      check(resp, {
+        'getSoldPet status equals 200': (r) => r.status === 200,
+        'getSoldPet all pets have status sold': () => pets.every((pet: Pet) => pet.status === 'sold')
+      });
+
+
 
       const soldPetId = randomPet.id;
       return { ...stepData, soldPetId };
@@ -44,16 +49,21 @@ export class PetSteps {
   }
 
 
-  getPendingPets<T extends object>(stepData: T = {} as T) {
+  getPendingPet<T extends object>(stepData: T = {} as T) {
 
-    return group('getPendingPets', function () {
+    return group('getPendingPet', function () {
 
       const resp = requestsManager.petService.findPetByStatus("pending")
 
-      check(resp, { 'getPendingPets status equals 200': (r) => r.status === 200 });
-
       const pets = JSON.parse(resp.body as string);
       const randomPet = randomItem(pets);
+
+      check(resp, {
+        'getPendingPet status equals 200': (r) => r.status === 200,
+        'getPendingPet all pets have status pending': () => pets.every((pet: Pet) => pet.status === 'pending')
+      });
+
+
 
       const pendingPetId = randomPet.id;
       const pendingPetName = randomPet.name;
@@ -69,39 +79,48 @@ export class PetSteps {
     return group("getPetById", function () {
       const getPetByIdResp = requestsManager.petService.findPetById(String(petId))
 
-      check(getPetByIdResp, { 'getPetById status equals 200': (r) => r.status === 200 });
+      check(getPetByIdResp, {
+        'getPetById status equals 200': (r) => r.status === 200,
+        'getPetById response pet Id matches requested pet Id': (r) => r.json("id") === petId,
+      });
 
       return { ...stepData, petId }
 
     })
   }
 
-  addNewPet<T extends object>(stepData: T = {} as T) {
+  addNewPet<T extends object>(stepData: T = {} as T, customPetData?: Pet) {
 
     return group('addNewPet', function () {
 
-      //Generate pet data
-      const petId: number = randomIntBetween(100000, 999999)
-      const categoryPetId: number = randomIntBetween(100, 999)
+      let reqPetDataObj: Pet;
 
-      // Request body
-      const bodyObj: Pet = {
-        "id": petId,
-        "category": {
-          "id": categoryPetId,
-          "name": "string"
-        },
-        "name": `pet ${petId}`,
-        "photoUrls": [
-          "string"
-        ],
-        "tags": [
-          {
-            "id": 0,
+      if (customPetData) {
+        reqPetDataObj = customPetData;
+      } else {
+        //Generate pet data
+        const petId: number = randomIntBetween(100000, 999999)
+        const categoryPetId: number = randomIntBetween(100, 999)
+
+        // Request body
+        reqPetDataObj = {
+          "id": petId,
+          "category": {
+            "id": categoryPetId,
             "name": "string"
-          }
-        ],
-        "status": "available"
+          },
+          "name": `pet_${petId}`,
+          "photoUrls": [
+            "string"
+          ],
+          "tags": [
+            {
+              "id": 0,
+              "name": "string"
+            }
+          ],
+          "status": "available"
+        }
       }
 
       const params = {
@@ -111,31 +130,28 @@ export class PetSteps {
         },
       };
 
-      const resp = requestsManager.petService.addNewPet(JSON.stringify(bodyObj), params)
+      const resp = requestsManager.petService.addNewPet(JSON.stringify(reqPetDataObj), params)
 
-      const pets = JSON.parse(resp.body as string);
-      const petIdResp = pets.id
+      const respPetDataObj = JSON.parse(resp.body as string);
+      const petIdResp = respPetDataObj.id
+      const petName = respPetDataObj.name
 
       check(resp, {
         'addNewPet status equals 200': (r) => r.status === 200,
-        'addNewPet response pet Id matches requested pet Id': () => Number(petIdResp) === bodyObj.id
+        'addNewPet response pet Id matches requested pet Id': () => Number(petIdResp) === reqPetDataObj.id
       });
 
-      return { ...stepData, petId, bodyObj };
+      const petId = reqPetDataObj.id;
+      return { ...stepData, petId, petName, petIdResp, respPetDataObj };
 
 
     });
   };
 
 
-  updatePetStatusToSold<T extends { bodyObj: Pet }>(stepData: T) {
+  updatePet<T extends object>(stepData: T, respPetDataObj: Pet) {
 
-    const { bodyObj } = stepData
-
-    bodyObj.status = 'sold';  //
-
-    return group('updatePetStatusToSold', function () {
-
+    return group('updatePet', function () {
 
       const params = {
         headers: {
@@ -144,18 +160,48 @@ export class PetSteps {
         },
       };
 
-      const resp = requestsManager.petService.setPetStatusSold(JSON.stringify(bodyObj), params)
+      const resp = requestsManager.petService.updatePetObj(JSON.stringify(respPetDataObj), params)
+
+      const pet = JSON.parse(resp.body as string);
+      const petId = pet.id
+
+      check(resp, {
+        'updatePet status equals 200': (r) => r.status === 200,
+        'updatePet resp petId matches requested petId': (r) => r.json("id") === String(petId)
+      });
+
+      return { ...stepData };
+
+    });
+  }
+
+  updatePetStatus<T extends { petId: number, petName: string }>(stepData: T, petStatus: 'available' | 'pending' | 'sold') {
+
+    const { petId, petName } = stepData
+
+    const updatePetPayload: string = `name=${petName}&status=${petStatus}`
+
+    return group('updatePetStatus', function () {
+
+
+      const params = {
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      };
+
+      const resp = requestsManager.petService.updatePetStatus(petId, updatePetPayload, params)
 
       const pet = JSON.parse(resp.body as string);
       const petStatus = pet.status
 
-
       check(resp, {
-        'updatePetStatusToSold status equals 200': (r) => r.status === 200,
-        'updatePetStatusToSold status is sold': () => petStatus === 'sold'
+        'updatePetStatus status equals 200': (r) => r.status === 200,
+        'updatePetStatus resp petId matches requested petId': (r) => r.json("message") === String(petId)
       });
 
-      return { ...stepData };
+      return { ...stepData, petStatus };
 
     });
   }

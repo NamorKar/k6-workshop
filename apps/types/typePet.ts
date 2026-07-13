@@ -1,8 +1,8 @@
-export interface Category {
+interface Category {
     id: number;
     name: string;
 }
-export interface Tag {
+interface Tag {
     id: number;
     name: string;
 }

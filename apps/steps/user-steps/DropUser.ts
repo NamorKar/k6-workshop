@@ -1,12 +1,11 @@
 import { check, group } from "k6";
 import { requestsManager } from "../../requestsManager.ts";
-import { User } from "../../types/typeUser.ts";
 
 export class DropUser {
 
-    execute<T extends { userName: string, bodyObj: User }>(stepData: T) {
+    execute<T extends { userName: string}>(stepData: T) {
 
-        const { userName, bodyObj } = stepData
+        const { userName} = stepData
 
         return group('dropUser', function () {
 
@@ -18,10 +17,11 @@ export class DropUser {
                 },
             };
 
-            const resp = requestsManager.userService.deleteUser(userName, JSON.stringify(bodyObj), params)
+            const resp = requestsManager.userService.deleteUser(userName, params)
 
             check(resp, {
                 'dropUser status equals 200': (r) => r.status === 200,
+                'dropUser message equal username': (r) => r.json("message") === userName,
             });
 
 

@@ -3,7 +3,6 @@ import { stepsManagerExec } from "../../apps/stepsManagerExec.ts";
 export const options = {
   vus: 1,
   iterations: 1,
-  duration: '1m',
 };
 
 export default function() {

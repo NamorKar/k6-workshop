@@ -10,7 +10,7 @@ export class CheckUserIsNotFound {
 
         return group('checkUserIsNotFound', function () {
 
-            const resp = requestsManager.userService.getUserByUsername(userName)
+            const resp = requestsManager.userService.getUserDataByUsername(userName)
 
             const users = JSON.parse(resp.body as string); //Fix 
             const userNotFoundMessage = users.message;

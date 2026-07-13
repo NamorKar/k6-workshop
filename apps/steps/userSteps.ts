@@ -7,20 +7,21 @@ import { User } from "../types/typeUser.ts";
 
 export class UserSteps {
 
-  getUserByUsername<T extends { userName: string }>(stepData: T) {
+  getUserDataByUsername<T extends { userName: string }>(stepData: T) {
 
     const { userName } = stepData
 
-    return group('getUserByEnteredUsername', function () {
+    return group('getUserDataByUsername', function () {
 
-      const resp = requestsManager.userService.getUserByUsername(userName)
+      const resp = requestsManager.userService.getUserDataByUsername(userName)
 
-      check(resp, { 'getUserByUsername status equals 200': (r) => r.status === 200 });
+      check(resp, { 'getUserDataByUsername status equals 200': (r) => r.status === 200 });
 
       const users = JSON.parse(resp.body as string);
 
       const userId = users.id;
-      return { ...stepData, userId };
+
+      return { ...stepData, userId, userName };
 
     });
   }
@@ -32,7 +33,7 @@ export class UserSteps {
 
     return group('checkUserIsNotFound', function () {
 
-      const resp = requestsManager.userService.getUserByUsername(userName)
+      const resp = requestsManager.userService.getUserDataByUsername(userName)
 
       const users = JSON.parse(resp.body as string);
       const userNotFoundMessage = users.message;
@@ -81,8 +82,9 @@ export class UserSteps {
 
       const resp = requestsManager.userService.createNewUser(JSON.stringify(bodyObj), params)
 
-      const users = JSON.parse(resp.body as string);
-      const respUserId = users.message
+      const respUserData = JSON.parse(resp.body as string);
+  
+      const respUserId = respUserData.message
 
       check(resp, {
         'createNewUser status equals 200': (r) => r.status === 200,
@@ -90,7 +92,7 @@ export class UserSteps {
       });
 
       console.log(`Created user ${userName} with id : ${userId}`);
-      return { ...stepData, userId, userName, userPassword, bodyObj };
+      return { ...stepData, userId, userName, userPassword, respUserData };
 
     });
   };
@@ -120,17 +122,15 @@ export class UserSteps {
         }
       });
 
-      return { ...stepData, userSessionId };
+      return { ...stepData, userName, userSessionId };
 
     });
   }
 
 
-  updateUserDataDisableUser<T extends { userName: string, bodyObj: User }>(stepData: T) {
+  updateUserDataDisableUser<T extends object>(stepData: T, userName: string, respUserData: User) {
 
-    const { userName, bodyObj } = stepData
-
-    bodyObj.userStatus = 1;  //
+     const updatedUserData = { ...respUserData, userStatus: 1 };
 
     return group('updateUserData', function () {
 
@@ -142,20 +142,24 @@ export class UserSteps {
         },
       };
 
-      const resp = requestsManager.userService.updateUserData(userName, JSON.stringify(bodyObj), params)
+      const resp = requestsManager.userService.updateUserData(userName, JSON.stringify(updatedUserData), params)
 
       check(resp, {
         'updateUserDataDisableUser status equals 200': (r) => r.status === 200,
       });
 
-      return { ...stepData };
+      return { ...stepData};
 
     });
   }
 
-  dropUser<T extends { userName: string, bodyObj: User }>(stepData: T) {
+  dropUser<T extends object>(stepData: T & Partial<{ userName: string }> = {} as T, userNameArg?: string) {
+    
+    const userName = userNameArg || stepData.userName;
 
-    const { userName, bodyObj } = stepData
+    if (!userName) {
+      throw new Error('userName must be provided either in stepData or as argument');
+    }
 
     return group('dropUser', function () {
 
@@ -167,10 +171,11 @@ export class UserSteps {
         },
       };
 
-      const resp = requestsManager.userService.deleteUser(userName, JSON.stringify(bodyObj), params)
+      const resp = requestsManager.userService.deleteUser(userName, params)
 
       check(resp, {
         'dropUser status equals 200': (r) => r.status === 200,
+        'dropUser message equal username': (r) => r.json("message") === userName,
       });
 
       return { ...stepData };

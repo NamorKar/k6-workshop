@@ -15,7 +15,11 @@ export class PetService extends BaseRequests {
         return this.POST(`/v2/pet/`, body, params)
     }
 
-    setPetStatusSold(body: RequestBody, params?: Params) {
+    updatePetStatus(petId: number, body: RequestBody, params?: Params) {
+        return this.POST(`/v2/pet/${petId}`, body, params)
+    }
+
+    updatePetObj(body: RequestBody, params?: Params) {
         return this.PUT(`/v2/pet/`, body, params)
         
     }

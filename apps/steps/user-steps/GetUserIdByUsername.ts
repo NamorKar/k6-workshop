@@ -10,7 +10,7 @@ export class GetUserIdByUsername {
 
         return group('getUserByEnteredUsername', function () {
 
-            const resp = requestsManager.userService.getUserByUsername(userName)
+            const resp = requestsManager.userService.getUserDataByUsername(userName)
 
             check(resp, { 'getUserByUsername status equals 200': (r) => r.status === 200 });
 

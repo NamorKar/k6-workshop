@@ -79,7 +79,10 @@ export class StoreSteps {
 
             const resp = requestsManager.storeService.findOrderById((String(orderId)))
 
-            check(resp, { 'findOrderbyId status equals 200': (r) => r.status === 200 });
+            check(resp, {
+                'findOrderbyId status equals 200': (r) => r.status === 200,
+                'findOrderbyId response order Id matches requested order Id': (r) => r.json("id") === orderId,
+            });
 
             return { ...stepData };
 
@@ -105,6 +108,7 @@ export class StoreSteps {
 
             check(resp, {
                 'deleteOrder status equals 200': (r) => r.status === 200,
+                'deleteOrder response order Id matches requested order Id': (r) => r.json("message") === String(orderId),
             });
 
             return { ...stepData };

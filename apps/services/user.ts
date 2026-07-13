@@ -3,7 +3,7 @@ import { BaseRequests } from "./baseRequests.ts";
 
 export class UserService extends BaseRequests {
 
-    getUserByUsername (username: string, params?:Params) {
+    getUserDataByUsername (username: string, params?:Params) {
         return this.GET (`/v2/user/${username}`, params)
 
     }
@@ -24,8 +24,8 @@ export class UserService extends BaseRequests {
 
     }
 
-            deleteUser (username: string, body: RequestBody, params?:Params) {
-        return this.DELETE (`/v2/user/${username}`, body, params)
+            deleteUser (username: string, params?:Params) {
+        return this.DELETE (`/v2/user/${username}`,null, params)
 
     }
     
